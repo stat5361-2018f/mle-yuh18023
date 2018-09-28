@@ -180,7 +180,7 @@ ge <- function(k,r){
   sum( (beetles$beetles - g(k, r))^2 )
 }
 r <- seq(0,1,length.out = 100)
-k <- seq(0,1200,length.out = 10000)
+k <- seq(0,1700,length.out = 10000)
 m <- outer(k, r, FUN = Vectorize(ge))
 contour(k, r, m)
 ```
@@ -188,3 +188,29 @@ contour(k, r, m)
 
 # 2.
 
+```{r}
+beetles <- data.frame(
+    days    = c(0, 8, 28, 41, 63, 69, 97, 117, 135, 154),
+    beetles = c(2, 47, 192, 256, 768, 896, 1120, 896, 1184, 1024))
+
+lg <- function(theta) {
+  K = theta[1]
+  r = theta[2]
+  sigma = theta[3]
+  l1= -sum(dnorm(log(beetles$beetles), log((2*K)/(2 + (K - 2)*exp(-r*beetles$days))), sigma, log =TRUE))
+return(l1)
+}
+library(stats)
+options(warn=-1)
+mle=optim(c(1100,0.2,3),lg,method="BFGS",hessian=TRUE)
+mle
+```
+
+Estimators:
+$$\hat k=1099.9586085$$
+$$\hat r=0.3919630$$
+$$\hat \sigma=0.7318843$$
+Variance:
+var($\hat k$)=6.239453e-06
+var($\hat r$)=86.752169945
+var($\hat \sigma$)=37.44918186
