@@ -1,1 +1,190 @@
-HW4
+
+---
+title: "Many local maxima and Modeling beetle data"
+author:
+  - Yuance He
+date: "09/28/2018"
+documentclass: article
+papersize: letter
+fontsize: 11pt
+
+output: pdf_document
+---
+
+## 3.3.2
+# 1.
+
+Given the density function, the likelihood function is:
+  $$L(\theta)=\prod^{n}_{i=1}\frac{1-\cos(X_{i}-\theta)}{2\pi}$$
+  
+Then the log-likelihood function is:
+  $$l(\theta)=-n\log2\pi+\sum^{n}_{i=1}\log[1-\cos(X_{i}-\theta)]$$
+
+```{r}
+x <- c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96,
+       2.53, 3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52)
+lg <- function(theta){
+  l1=-19*log(2*pi) + sum(log(1 - cos(x - theta)))
+  l1
+}
+lf <- Vectorize(lg)
+curve(lf, from = -pi, to = pi, xname = "theta", ylab = "Log-likelihood")
+```
+
+
+# 2.
+
+\begin{align*}
+E(X|\theta) & =\int^{2\pi}_{0}x\frac{1-\cos(x-\theta)}{2\pi}dx\\
+            & =\frac{1}{2\pi}\left(2\pi^{2}+2\pi\sin\theta\right)\\
+            & =\pi+\sin\theta
+\end{align*}
+
+$\bar{X}_{n}$ is 3.236842. 
+```{r}
+theta1=asin(3.236842-pi)
+theta2=pi-theta1
+theta1
+theta2
+```
+
+# 3.
+
+```{r}
+x <- c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96,
+       2.53, 3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52)
+lg1 <- function(theta){
+  sum( sin(x-theta)/(1-cos(x-theta)) )
+}
+lg2 <- function(theta){
+  sum(1/(1-cos(x-theta))^2)
+}
+
+start <- c(theta1,theta2)
+Newton <- function(start, max, tol = 1e-5){
+  sp = start
+   for(i in 1:max)
+   {
+      update = sp - lg1(sp)/lg2(sp)
+      if(abs(update -sp) < tol) break
+      sp = update
+   }
+  return( c(sp, i ) )
+}
+result = matrix(0, 2, 2)
+for(i in 1:2)
+{
+   result[i,] = Newton(start[i], 100)
+}
+colnames(result) = c('Root', '# of iteration')
+rownames(result) = c(theta1,theta2)
+
+knitr::kable(result)
+
+```
+
+# 4.
+
+```{r}
+x <- c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96,
+       2.53, 3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52)
+lg1 <- function(theta){
+  sum( sin(x-theta)/(1-cos(x-theta)) )
+}
+lg2 <- function(theta){
+  sum(1/(1-cos(x-theta))^2)
+}
+
+start <- c(-2.7,2.7)
+Newton <- function(start, max, tol = 1e-5){
+  sp = start
+   for(i in 1:max)
+   {
+      update = sp - lg1(sp)/lg2(sp)
+      if(abs(update -sp) < tol) break
+      sp = update
+   }
+  return( c(sp, i ) )
+}
+result = matrix(0, 2, 2)
+for(i in 1:2)
+{
+   result[i,] = Newton(start[i], 100)
+}
+colnames(result) = c('Root', '# of iteration')
+rownames(result) = c(-2.7,2.7)
+
+knitr::kable(result)
+```
+
+
+# 5.
+
+```{r}
+x <- c(3.91, 4.85, 2.28, 4.06, 3.70, 4.04, 5.46, 3.53, 2.28, 1.96,
+       2.53, 3.88, 2.22, 3.47, 4.82, 2.46, 2.99, 2.54, 0.52)
+lg1 <- function(theta){
+  sum( sin(x-theta)/(1-cos(x-theta)) )
+}
+lg2 <- function(theta){
+  sum(1/(1-cos(x-theta))^2)
+}
+
+start <- c(seq(-pi,pi, length=200))
+Newton <- function(start, max, tol = 1e-5){
+  sp = start
+   for(i in 1:max)
+   {
+      update = sp - lg1(sp)/lg2(sp)
+      if(abs(update -sp) < tol) break
+      sp = update
+   }
+  return( c(sp, i ) )
+}
+result = matrix(0, 200, 2)
+for(i in 1:200)
+{
+   result[i,] = Newton(start[i], 1000)
+}
+colnames(result) = c('Root', '# of iteration')
+rownames(result) = c(seq(-pi,pi, length=200))
+
+knitr::kable(result)
+
+plot(seq(-pi, pi, length = 200), result[,1], xlab = "Starting Point", ylab = "Roots")
+```
+
+Then we can divide the set of the number of starting values into;
+[1:10] [11] [12] [13] [14:16] [17:23] [24] [25:29] [30] [31:54]
+[55]  [56:70]  [71:110] [111:116] [117]  [118:160] [161:162]  [163]  [164:170]  
+[171:173]  [174:178]  [179:181]  [182:190] [191:193] [194]  [195] [196] [196:200]
+
+
+## 3.3.3
+# 1.
+
+```{r}
+beetles <- data.frame(
+    days    = c(0,  8,  28,  41,  63,  69,   97, 117,  135,  154),
+    beetles = c(2, 47, 192, 256, 768, 896, 1120, 896, 1184, 1024))
+```
+
+Since $N_0=2$, to minimize:
+$$g(k, r)=\sum^{n}_{i=1}\left[N_{i}-\frac{2K}{2+(K-2)e^{-rt_{i}}}\right]^{2}$$
+```{r}
+g <- function(k,r) {
+  k*2/(2 + (k-2)*exp(-r*beetles$days))
+}
+
+ge <- function(k,r){
+  sum( (beetles$beetles - g(k, r))^2 )
+}
+r <- seq(0,1,length.out = 100)
+k <- seq(0,1200,length.out = 10000)
+m <- outer(k, r, FUN = Vectorize(ge))
+contour(k, r, m)
+```
+
+
+# 2.
+
